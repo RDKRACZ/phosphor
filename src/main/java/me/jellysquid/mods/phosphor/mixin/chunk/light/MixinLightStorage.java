@@ -568,6 +568,9 @@ public abstract class MixinLightStorage<M extends ChunkToNibbleArrayMap<M>> exte
     @Shadow
     protected abstract void setColumnEnabled(long columnPos, boolean enabled);
 
+    @Shadow
+    protected abstract void setSectionStatus(final long sectionPos, final boolean notReady);
+
     @Override
     @Invoker("setColumnEnabled")
     public abstract void invokeSetColumnEnabled(final long chunkPos, final boolean enabled);
@@ -642,6 +645,7 @@ public abstract class MixinLightStorage<M extends ChunkToNibbleArrayMap<M>> exte
             }
 
             this.setColumnEnabled(chunkPos, false);
+            this.removeBlockData(chunkPos);
         } else {
             // First need to remove all pending light updates before changing any light value
 
@@ -677,6 +681,7 @@ public abstract class MixinLightStorage<M extends ChunkToNibbleArrayMap<M>> exte
             // Remove all additional data
 
             this.afterChunkDisabled(chunkPos, removedLightmaps);
+            this.removeBlockData(chunkPos);
         }
     }
 
@@ -698,6 +703,13 @@ public abstract class MixinLightStorage<M extends ChunkToNibbleArrayMap<M>> exte
         } else {
             this.trivialLightmaps.remove(sectionPos);
             return true;
+        }
+    }
+
+    @Unique
+    private void removeBlockData(final long chunkPos) {
+        for (int y = -1; y < 17; ++y) {
+            this.setSectionStatus(ChunkSectionPosHelper.updateYLong(chunkPos, y), true);
         }
     }
 
